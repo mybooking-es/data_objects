@@ -118,7 +118,9 @@ module DataObjects
             end
 
             def self.new(*args)
-              (@__pools[args] ||= __pool_lock.synchronize { Pool.new(self.pool_size, self, args) }).new
+              # 2021.02.21 One common POOL
+              #(@__pools[args] ||= __pool_lock.synchronize { Pool.new(self.pool_size, self, args) }).new
+              (@__pools[DataObjects::Pooling] ||= __pool_lock.synchronize { Pool.new(self.pool_size, self, args) }).new
             end
 
             def self.__pools
@@ -126,7 +128,9 @@ module DataObjects
             end
 
             def self.pool_size
-              8
+              # 2021.02.21 Pool Size
+              #8
+              ENV['DB_POOL_SIZE'].to_i > 0 ? ENV['DB_POOL_SIZE'].to_i : 8
             end
           end
         end
@@ -231,7 +235,9 @@ module DataObjects
 
       def dispose
         flush!
-        @resource.__pools.delete(@args)
+        # 2021.02.21 One common POOL
+        #@resource.__pools.delete(@args)
+        @resource.__pools.delete(DataObjects::Pooling)
         !DataObjects::Pooling.pools.delete?(self).nil?
       end
 
